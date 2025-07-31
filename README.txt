@@ -128,36 +128,6 @@ make
 - Test environment setup
 - Predefined document template for signing
 
-## Dropbox Sign Setup
-This implementation uses Dropbox Sign (formerly HelloSign). To get started:
-
-1. Create a free developer account at https://app.hellosign.com/api/register
-2. Go to API Settings and copy your API key
-3. Set up your API key securely:
-
-### Recommended: Using .env file (more secure)
-```bash
-# Copy the template
-cp .env.example .env
-
-# Edit .env and add your API key
-# nano .env or vim .env
-
-# The .env file is automatically loaded by the server
-# and is excluded from version control
-```
-
-### Alternative: Environment variable
-```bash
-export DROPBOX_SIGN_API_KEY=your_api_key_here
-```
-
-## Security
-- **NEVER** commit your API key to version control
-- The `.env` file is automatically ignored by git
-- See [SECURITY.md](SECURITY.md) for detailed security practices
-- The API key is only used server-side, never exposed to the frontend
-
 ## Testing Process
 The application should support this simple test flow:
 1. Run one command to start the server

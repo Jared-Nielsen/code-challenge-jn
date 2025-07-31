@@ -1,0 +1,72 @@
+Technical Design Document (TDD) for Embedded Document Signing Web Application1. OverviewThis TDD describes the technical implementation for the PRD. The system uses a C++ backend server for API interactions with Dropbox Sign and a pure HTML frontend for user interaction. Keep implementation minimal: use REST calls, basic polling for status, and file serving.2. ArchitectureClient-Server Model: Frontend (browser) communicates with backend via REST API over HTTP.
+Components:Frontend: index.html (HTML/CSS/JS) handles UI, form submission, iframe embedding, polling.
+Backend: Single C++ executable using cpp-httplib (HTTP server), nlohmann/json (JSON handling).
+
+Data Flow:Frontend POSTs signer info to backend.
+Backend creates Dropbox Sign signature request (upload sample.pdf, prefill fields, embedded).
+Backend returns session ID and signing URL.
+Frontend embeds URL in iframe.
+Frontend polls status; backend queries Dropbox Sign.
+On complete, frontend shows download link; backend downloads from Dropbox Sign and serves PDF.
+
+State Management: Backend uses in-memory map (std::unordered_map) to store sessions (key: session ID, value: signature_request_id, status).
+Error Handling: Catch exceptions, return JSON errors (e.g., { "error": "message" } with HTTP 400/500).
+
+3. TechnologiesBackend:C++17.
+cpp-httplib: For HTTP server and client (to call Dropbox Sign API).
+nlohmann/json: For JSON parsing/serialization.
+CMake: For building.
+
+Frontend: Pure HTML5, CSS (inline), Vanilla JS (inline, using fetch for API calls).
+E-Signature Provider: Dropbox Sign REST API (base URL: https://api.hellosign.com/v3).Auth: API key via HTTP Basic Auth (username: API_KEY, password empty).
+Key Endpoints:POST /signature_request/create_embedded: Create request with file, signers, fields (prefill text fields with signer info).
+GET /embedded/sign_url/{signature_id}: Get embedded URL.
+GET /signature_request/{request_id}: Check status.
+GET /signature_request/files/{request_id}: Download signed PDF.
+
+Environment: API key via env var (DROPBOX_SIGN_API_KEY). Sample file: sample.pdf in backend dir.
+
+4. API DesignAll endpoints return JSON. CORS enabled for localhost.POST /api/sessionsRequest: { "name": string, "email": string, "phone": string } (validate: non-empty, email regex).
+Logic: Generate unique session ID (e.g., UUID or counter).
+Read sample.pdf.
+Call Dropbox Sign: Create embedded signature request.Signer: { email, name }.
+Files: sample.pdf.
+Form fields: Text fields prefilled (e.g., name at {x:50,y:100}, email at {x:50,y:150}, phone at {x:50,y:200}; page 1, signer 0, required false for prefill).
+Test mode: true.
+
+Store session: { session_id: { request_id, status: "pending" } }.
+
+Response: { "session_id": string } (201 Created).
+
+POST /api/sessions/:id/signing-url (or GET for simplicity)Logic: Get signature_id from request's signers[0], call /embedded/sign_url.
+Response: { "sign_url": string }.
+
+GET /api/sessions/:id/statusLogic: Fetch /signature_request/{request_id}, update stored status (e.g., "pending", "signed" if all signatures signed).
+Response: { "status": "pending" | "signed" | "error" }.
+
+GET /api/documents/:id.pdfLogic: If status "signed", call /signature_request/files/{request_id}?file_type=pdf, serve binary PDF.
+Response: application/pdf binary (or 404 if not complete).
+
+Static Serving: Serve /index.html from public/.
+
+5. Frontend Implementation DetailsStructure: Single <html> with <style> and <script>.
+UI: Form with inputs (name, email, phone), button "Start Signing".On submit: Fetch POST /api/sessions, then fetch signing-url, set iframe.src.
+Status div: Update via setInterval poll to /status every 5s.
+On "signed": Show <a> to /documents/:id.pdf for download.
+
+JS: Use fetch for API, handle errors with alerts.
+
+6. Backend Implementation DetailsServer Setup: httplib::Server, listen on 8080.
+HTTP Client: httplib::Client for Dropbox Sign calls (multipart for file upload).
+File Handling: std::ifstream for sample.pdf.
+Session Storage: std::unordered_map<std::string, struct { std::string request_id; std::string status; }>.
+Build: CMakeLists.txt to compile main.cpp with includes.
+Scripts: build.sh (mkdir build, cmake, make), run.sh (build if needed, run executable).
+
+7. Testing and Edge CasesHappy Path: As in user flow.
+Errors: Invalid input (400), API failure (500), session not found (404).
+Simulate: Use test mode; manually sign in iframe to test status/download.
+
+8. DeploymentOne-line: ./run.sh (builds and runs).
+Access: http://localhost:8080/.
+

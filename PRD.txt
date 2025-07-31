@@ -1,0 +1,48 @@
+Product Requirements Document (PRD) for Embedded Document Signing Web Application1. IntroductionPurposeThis PRD outlines the requirements for a simple web application that implements embedded document signing using an e-signature provider. The application is designed for a job interview demonstration, focusing on core functionality without overcomplication. It will use Dropbox Sign (formerly HelloSign) as the e-signature provider due to its straightforward REST API and ease of integration for embedded signing.ScopeFrontend: A single pure HTML file (index.html) with embedded CSS and JavaScript (no frameworks).
+Backend: A lightweight C++ server using cpp-httplib for HTTP handling and nlohmann/json for JSON parsing.
+Core Features: Collect signer info, prefill it into a document, embed the signing experience, show status, and allow download of the signed document.
+Out of Scope: Bonus features like multiple signers, templates, custom positions, mobile responsiveness, progress indicators, or email notifications. No production-level scaling, authentication beyond API keys, or advanced security (e.g., HTTPS).
+
+Target AudienceInterview evaluators testing end-to-end functionality.
+Developers demonstrating integration skills.
+
+AssumptionsA free Dropbox Sign developer account is set up with an API key.
+A sample PDF document (sample.pdf) exists in the backend directory with predefined form fields (e.g., text boxes for name, email, phone).
+Test mode is used (no real emails or charges).
+Environment variables handle sensitive data (e.g., API key).
+
+2. FeaturesFeature 1: Signer Information InputUsers input name, email, and phone via a form.
+Inputs are validated (basic: non-empty, email format).
+Data is sent to backend to create a signing session with prefilled document fields.
+
+Feature 2: Embedded SigningAfter submitting info, generate and display an embedded signing URL in an iframe.
+Signer info (name, email, phone) is prefilled into document fields (e.g., text fields).
+Signing happens inline without leaving the page.
+
+Feature 3: Real-time Status DisplayShow status updates (e.g., "Preparing", "Signing in Progress", "Completed").
+Frontend polls backend for status changes.
+Backend checks Dropbox Sign API for signature request status.
+
+Feature 4: Document RetrievalOnce signed, provide a download button for the completed PDF.
+Backend fetches the signed document from Dropbox Sign and serves it.
+
+Non-Functional RequirementsPerformance: Responsive for local testing (under 5s for API calls).
+Security: API key stored in environment variable; no exposure to frontend. Validate inputs to prevent injection.
+Error Handling: Display user-friendly messages for failures (e.g., invalid input, API errors).
+Documentation: Include a README.md with setup, build, and run instructions, including a one-line command (./run.sh).
+
+3. User FlowOpen http://localhost:8080/ in browser (serves index.html).
+Enter name, email, phone in form; click "Start Signing".
+Form submits to backend /api/sessions to create session and prefill document.
+Backend responds with session ID; frontend requests /api/sessions/:id/signing-url.
+Embed iframe with signing URL; user signs document.
+Frontend polls /api/sessions/:id/status every 5s to update status.
+When complete, show download button linking to /api/documents/:id.pdf.
+
+4. Acceptance CriteriaEnd-to-end test: Input data, sign embedded document, see status update to complete, download signed PDF.
+Code Quality: Clean, readable; no unused code.
+Meets all specified requirements without extras.
+
+5. DependenciesDropbox Sign API (REST endpoints for signature requests, embedded URLs, status, downloads).
+Sample PDF with form fields (hardcoded in backend).
+

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Signing Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .status.info {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status.success {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status.error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .status.warning {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .signing-frame {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            color: #95a5a6;
+        }
+
+        .progress-step.active {
+            color: #3498db;
+        }
+
+        .progress-step.completed {
+            color: #27ae60;
+        }
+
+        .progress-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+
+        .progress-line {
+            width: 100px;
+            height: 2px;
+            background-color: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Document Signing Portal</h1>
+            <p>Secure embedded document signing</p>
+        </div>
+
+        <div class="progress-indicator">
+            <div class="progress-step active" id="step1">
+                <div class="progress-circle">1</div>
+                <div class="progress-line"></div>
+            </div>
+            <div class="progress-step" id="step2">
+                <div class="progress-circle">2</div>
+                <div class="progress-line"></div>
+            </div>
+            <div class="progress-step" id="step3">
+                <div class="progress-circle">3</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Signer Information -->
+        <div id="signerForm" class="card">
+            <h2>Signer Information</h2>
+            <form id="signerInfoForm">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required placeholder="John Doe" value="">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="john.doe@example.com" value="">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="+1 (555) 123-4567" value="">
+                </div>
+                <button type="submit" class="btn">Next</button>
+            </form>
+        </div>
+
+        <!-- Step 2: Document Signing -->
+        <div id="signingSection" class="card hidden">
+            <h2>Sign Your Document</h2>
+            <div id="signingStatus" class="status info">
+                Preparing your document for signing...
+            </div>
+            <iframe id="signingFrame" class="signing-frame hidden" frameborder="0"></iframe>
+        </div>
+
+        <!-- Step 3: Completion -->
+        <div id="completionSection" class="card hidden">
+            <h2>Signing Complete!</h2>
+            <div class="status success">
+                Your document has been successfully signed.
+            </div>
+            <div class="button-group">
+                <button id="downloadBtn" class="btn">Download Document</button>
+                <button id="newSigningBtn" class="btn btn-secondary">Start New Signing</button>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="card hidden">
+            <h2>Error</h2>
+            <div id="errorMessage" class="status error"></div>
+            <div class="button-group">
+                <button id="retryBtn" class="btn">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use WSL IP address or localhost depending on how you're accessing
+        const API_BASE = window.location.protocol === 'file:' 
+            ? 'http://172.28.47.19:8080/api'  // WSL IP when opening file directly
+            : 'http://localhost:8080/api';     // When served by the server
+        let currentSession = null;
+        
+        // Dev mode detection and prepopulation
+        const isDevMode = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' || 
+                         window.location.protocol === 'file:';
+        
+        // Prepopulate form fields in dev mode
+        if (isDevMode) {
+            window.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('name').value = 'Jared Nielsen';
+                document.getElementById('email').value = 'jared@fuzionagency.com';
+                document.getElementById('phone').value = '3463605146';
+            });
+        }
+
+        // Progress indicator update
+        function updateProgress(step) {
+            document.querySelectorAll('.progress-step').forEach((el, index) => {
+                if (index < step - 1) {
+                    el.classList.add('completed');
+                    el.classList.remove('active');
+                } else if (index === step - 1) {
+                    el.classList.add('active');
+                    el.classList.remove('completed');
+                } else {
+                    el.classList.remove('active', 'completed');
+                }
+            });
+        }
+
+        // Show/hide sections
+        function showSection(sectionId) {
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        // Handle form submission
+        document.getElementById('signerInfoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const signerData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone')
+            };
+
+            try {
+                // Create session
+                const response = await fetch(`${API_BASE}/sessions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(signerData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create signing session');
+                }
+
+                currentSession = await response.json();
+                
+                // Move to signing step
+                updateProgress(2);
+                showSection('signingSection');
+                
+                // Get signing URL
+                await initiateSigningProcess();
+                
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        // Initiate signing process
+        async function initiateSigningProcess() {
+            const statusDiv = document.getElementById('signingStatus');
+            statusDiv.innerHTML = '<span class="spinner"></span>Generating signing session...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/sessions/${currentSession.session_id}/signing-url`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get signing URL');
+                }
+
+                const data = await response.json();
+                
+                // Load the signing URL in the iframe
+                const iframe = document.getElementById('signingFrame');
+                iframe.src = data.sign_url;
+                iframe.classList.remove('hidden');
+                
+                statusDiv.className = 'status info';
+                statusDiv.textContent = 'Please complete the signing process below. The form is pre-filled with your information.';
+                
+                // Start polling for status
+                startStatusPolling();
+                
+                // Listen for demo mode messages
+                window.addEventListener('message', (event) => {
+                    if (event.data === 'signing_complete') {
+                        stopStatusPolling();
+                        moveToCompletion();
+                    }
+                });
+                
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Status polling
+        let statusInterval = null;
+        
+        function startStatusPolling() {
+            // Check status immediately
+            checkStatus();
+            
+            // Then check every 5 seconds
+            statusInterval = setInterval(checkStatus, 5000);
+        }
+        
+        function stopStatusPolling() {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+                statusInterval = null;
+            }
+        }
+        
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/sessions/${currentSession.session_id}/status`);
+                const data = await response.json();
+                
+                if (data.status === 'signed') {
+                    stopStatusPolling();
+                    moveToCompletion();
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+            }
+        }
+
+        // Move to completion
+        function moveToCompletion() {
+            updateProgress(3);
+            showSection('completionSection');
+        }
+
+        // Download document
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            window.open(`${API_BASE}/documents/${currentSession.session_id}.pdf`, '_blank');
+        });
+
+        // Start new signing
+        document.getElementById('newSigningBtn').addEventListener('click', () => {
+            stopStatusPolling();
+            currentSession = null;
+            document.getElementById('signerInfoForm').reset();
+            updateProgress(1);
+            showSection('signerForm');
+        });
+
+        // Retry on error
+        document.getElementById('retryBtn').addEventListener('click', () => {
+            stopStatusPolling();
+            currentSession = null;
+            document.getElementById('signerInfoForm').reset();
+            updateProgress(1);
+            showSection('signerForm');
+        });
+
+        // Show error
+        function showError(message) {
+            stopStatusPolling();
+            document.getElementById('errorMessage').textContent = message;
+            showSection('errorSection');
+        }
+    </script>
+</body>
+</html>

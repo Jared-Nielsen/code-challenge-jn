@@ -1,0 +1,53 @@
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
+
+# API Keys and secrets
+*.key
+*.pem
+secrets/
+config/secrets/
+
+# Build output
+build/
+dist/
+*.o
+*.obj
+*.exe
+signing-server
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+temp/
+tmp/
+
+# Backup files
+*.bak
+*.backup
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Dependencies
+node_modules/
+vendor/
